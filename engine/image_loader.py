@@ -1,45 +1,76 @@
-"""
-Fashion Studio
-Image Loader
-
-负责：
-读取输入文件夹中的图片
-"""
-
-import os
-
-from config import (
-    INPUT_FOLDER,
-    SUPPORTED_IMAGE
-)
+from pathlib import Path
 
 
-def load_images(folder=INPUT_FOLDER):
+# 支持的图片格式
+IMAGE_EXTENSIONS = {
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp"
+}
+
+
+
+def load_images_from_folder(folder_path):
     """
-    获取文件夹内所有图片
+    读取指定文件夹中的全部图片
+
+    注意：
+    不进行排序
+    保留文件系统读取顺序
+
+    参数:
+        folder_path:
+            图片文件夹路径
+
+    返回:
+        图片路径列表
     """
+
+    folder = Path(folder_path)
+
+
+    if not folder.exists():
+
+        raise FileNotFoundError(
+            f"文件夹不存在: {folder_path}"
+        )
+
+
+    if not folder.is_dir():
+
+        raise ValueError(
+            "选择的路径不是文件夹"
+        )
+
 
     images = []
 
 
-    if not os.path.exists(folder):
+    # 按文件夹当前读取顺序获取图片
+    for file in folder.iterdir():
 
-        return images
+        if file.is_file():
 
+            if file.suffix.lower() in IMAGE_EXTENSIONS:
 
-    for filename in os.listdir(folder):
-
-        ext = os.path.splitext(filename)[1].lower()
-
-
-        if ext in SUPPORTED_IMAGE:
-
-            images.append(
-                os.path.join(
-                    folder,
-                    filename
+                images.append(
+                    str(file)
                 )
-            )
 
 
     return images
+
+
+
+def get_image_count(folder_path):
+
+    """
+    获取图片数量
+    """
+
+    images = load_images_from_folder(
+        folder_path
+    )
+
+    return len(images)
