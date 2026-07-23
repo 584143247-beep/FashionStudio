@@ -1,86 +1,85 @@
-"""
-Fashion Studio
-
-Collage Engine
-
-负责：
-图片拼接
-3:4画布生成
-"""
-
-
 from PIL import Image
-
-from config import (
-    OUTPUT_WIDTH,
-    OUTPUT_HEIGHT
-)
+from pathlib import Path
 
 
+# 最终小红书比例
+OUTPUT_WIDTH = 1080
+OUTPUT_HEIGHT = 1440
 
-def resize_image(
-        image,
-        target_height
-):
 
+def resize_cover(img, target_w, target_h):
     """
-    按高度等比例缩放
+    图片自动放大裁切
+    保持比例填满区域
     """
 
-    ratio = target_height / image.height
+    w, h = img.size
 
-
-    new_width = int(
-        image.width * ratio
+    scale = max(
+        target_w / w,
+        target_h / h
     )
 
+    new_size = (
+        int(w * scale),
+        int(h * scale)
+    )
 
-    return image.resize(
+    img = img.resize(
+        new_size,
+        Image.LANCZOS
+    )
+
+    left = (img.width - target_w) // 2
+    top = (img.height - target_h) // 2
+
+    img = img.crop(
         (
-            new_width,
-            target_height
+            left,
+            top,
+            left + target_w,
+            top + target_h
         )
     )
 
+    return img
 
 
-def create_collage(
-        left_image_path,
-        right_image_path
+
+def create_horizontal_collage(
+        img1_path,
+        img2_path,
+        output_path
 ):
 
     """
-    创建左右拼图
+    左右拼图核心
+
+    look1 | look2
+
+    输出3:4
     """
 
-
-    left = Image.open(
-        left_image_path
-    ).convert(
-        "RGB"
-    )
+    img1 = Image.open(img1_path).convert("RGB")
+    img2 = Image.open(img2_path).convert("RGB")
 
 
-    right = Image.open(
-        right_image_path
-    ).convert(
-        "RGB"
-    )
+    # 左右区域尺寸
+
+    half_width = OUTPUT_WIDTH // 2
 
 
-    # 统一高度
-
-    left = resize_image(
-        left,
+    img1 = resize_cover(
+        img1,
+        half_width,
         OUTPUT_HEIGHT
     )
 
-
-    right = resize_image(
-        right,
+    img2 = resize_cover(
+        img2,
+        half_width,
         OUTPUT_HEIGHT
     )
-
 
 
     canvas = Image.new(
@@ -93,33 +92,79 @@ def create_collage(
     )
 
 
-    # 左图位置
+    # 左右排列
 
     canvas.paste(
-        left,
-        (
-            0,
-            0
-        )
-    )
-
-
-    # 右图位置
-
-    right_x = (
-        OUTPUT_WIDTH
-        -
-        right.width
+        img1,
+        (0,0)
     )
 
 
     canvas.paste(
-        right,
-        (
-            right_x,
-            0
-        )
+        img2,
+        (half_width,0)
     )
 
 
-    return canvas
+    canvas.save(
+        output_path,
+        quality=95
+    )
+
+
+    return output_path
+
+
+
+def batch_generate(
+        pairs,
+        output_folder
+):
+
+    """
+    批量生成
+
+    pairs:
+
+    [
+      (look1,look2),
+      (look3,look4)
+    ]
+
+    """
+
+    output_folder = Path(output_folder)
+
+    output_folder.mkdir(
+        exist_ok=True
+    )
+
+
+    results=[]
+
+
+    for index,(a,b) in enumerate(
+        pairs,
+        start=1
+    ):
+
+
+        output_file = (
+            output_folder /
+            f"{index:03}.jpg"
+        )
+
+
+        create_horizontal_collage(
+            a,
+            b,
+            output_file
+        )
+
+
+        results.append(
+            output_file
+        )
+
+
+    return results
