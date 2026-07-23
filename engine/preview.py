@@ -1,65 +1,50 @@
-from PIL import Image
 from pathlib import Path
+from PIL import Image
 
 
-def create_preview(image_pairs, save_path):
+def create_preview(pair):
 
-    previews = []
-
-    for index, pair in enumerate(image_pairs[:5]):
-
-        img1 = Image.open(pair[0])
-        img2 = Image.open(pair[1])
-
-        height = max(img1.height, img2.height)
-
-        img1.thumbnail(
-            (
-                int(height * 0.75),
-                height
-            )
-        )
-
-        img2.thumbnail(
-            (
-                int(height * 0.75),
-                height
-            )
-        )
+    img1,img2 = pair
 
 
-        canvas = Image.new(
-            "RGB",
-            (
-                img1.width + img2.width,
-                height
-            ),
-            "white"
-        )
+    img1 = Image.open(img1)
+    img2 = Image.open(img2)
 
 
-        canvas.paste(
-            img1,
-            (0,0)
-        )
 
-        canvas.paste(
-            img2,
-            (
-                img1.width,
-                0
-            )
-        )
+    width = img1.width + img2.width
+    height = max(
+        img1.height,
+        img2.height
+    )
 
 
-        preview_file = Path(save_path) / f"preview_{index+1}.jpg"
-
-        canvas.save(
-            preview_file,
-            quality=95
-        )
-
-        previews.append(preview_file)
+    preview = Image.new(
+        "RGB",
+        (width,height),
+        "white"
+    )
 
 
-    return previews
+    preview.paste(
+        img1,
+        (0,0)
+    )
+
+
+    preview.paste(
+        img2,
+        (img1.width,0)
+    )
+
+
+    output = Path("preview_001.jpg")
+
+
+    preview.save(
+        output,
+        quality=95
+    )
+
+
+    return output
