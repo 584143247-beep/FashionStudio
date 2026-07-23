@@ -1,54 +1,50 @@
-"""
-Fashion Studio
-
-Export Engine
-
-负责：
-保存生成结果
-"""
+from pathlib import Path
+from PIL import Image
 
 
-import os
+def export_images(images, output_folder):
+    """
+    保存最终拼图结果
+    """
 
+    output_path = Path(output_folder)
 
-from config import (
-    OUTPUT_FOLDER,
-    JPEG_QUALITY
-)
+    output_path.mkdir(
+        exist_ok=True
+    )
 
+    count = 1
 
+    for img in images:
 
-def export_image(
-        image,
-        number
-):
-
-
-    if not os.path.exists(
-        OUTPUT_FOLDER
-    ):
-
-        os.makedirs(
-            OUTPUT_FOLDER
+        filename = (
+            f"{count:03d}.jpg"
         )
 
+        save_path = (
+            output_path /
+            filename
+        )
+
+        img.save(
+            save_path,
+            quality=95
+        )
+
+        count += 1
 
 
-    filename = (
-        f"{number:03d}.jpg"
+def create_output_folder(folder):
+
+    folder = Path(folder)
+
+    output = (
+        folder /
+        "拼图输出"
     )
 
-
-    path = os.path.join(
-        OUTPUT_FOLDER,
-        filename
+    output.mkdir(
+        exist_ok=True
     )
 
-
-    image.save(
-        path,
-        quality=JPEG_QUALITY
-    )
-
-
-    return path
+    return output
